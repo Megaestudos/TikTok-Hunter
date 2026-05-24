@@ -16,6 +16,7 @@ export interface TikTokVideo {
   trendScore: number;
   coverImage: string;
   detectedProduct?: string;
+  productUrl?: string;
   badges?: string[];
 }
 
@@ -60,6 +61,7 @@ export const TikTokService = {
         const likes = item.diggCount || 0;
         const shares = item.shareCount || 0;
         const text = item.text || "";
+        const detectedProduct = detectProductName(text);
         
         return {
           id: item.id || Math.random().toString(36).substr(2, 9),
@@ -73,7 +75,8 @@ export const TikTokService = {
           createTime: item.createTime,
           coverImage: item.videoMeta?.coverUrl || item.covers?.origin || "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800&auto=format&fit=crop&q=60",
           trendScore: calculateTrendScore(views, likes, shares),
-          detectedProduct: detectProductName(text),
+          detectedProduct: detectedProduct,
+          productUrl: `https://www.amazon.com/s?k=${encodeURIComponent(detectedProduct)}`,
           badges: assignBadges(views, likes, shares)
         };
       });
@@ -131,6 +134,7 @@ function getMockVideos(): TikTokVideo[] {
       trendScore: 98,
       coverImage: "https://images.unsplash.com/photo-1535016120720-40c646bebbdc?w=800&auto=format&fit=crop&q=60",
       detectedProduct: "Mini Projetor 4K",
+      productUrl: "https://www.amazon.com/s?k=mini+projector+4k",
       badges: ["Trending", "High Growth"]
     },
     {
@@ -146,6 +150,7 @@ function getMockVideos(): TikTokVideo[] {
       trendScore: 85,
       coverImage: "https://images.unsplash.com/photo-1534073828943-f801091bb18c?w=800&auto=format&fit=crop&q=60",
       detectedProduct: "Luminária Magnética",
+      productUrl: "https://www.amazon.com/s?k=magnetic+lamp",
       badges: ["High Growth"]
     },
     {
@@ -161,6 +166,7 @@ function getMockVideos(): TikTokVideo[] {
       trendScore: 94,
       coverImage: "https://images.unsplash.com/photo-1596462502278-27bfdc4033c8?w=800&auto=format&fit=crop&q=60",
       detectedProduct: "Sérum Skincare",
+      productUrl: "https://www.amazon.com/s?k=skincare+serum",
       badges: ["Trending", "Low Competition"]
     }
   ];

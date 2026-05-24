@@ -46,10 +46,10 @@ export default function ViralProducts() {
               animate={{ opacity: 1, x: 0 }}
             >
               <h1 className="text-3xl font-bold font-space-grotesk tracking-tight flex items-center gap-3">
-                <Play className="text-primary fill-primary" size={28} />
-                Tendências TikTok
+                <ShoppingBag className="text-primary" size={28} />
+                Produtos Vencedores
               </h1>
-              <p className="text-muted text-sm mt-1">Dados reais via Apify • Atualizado em tempo real.</p>
+              <p className="text-muted text-sm mt-1">Vídeos virais de produtos à venda com alto potencial de lucro.</p>
             </motion.div>
             
             <div className="flex items-center gap-3">

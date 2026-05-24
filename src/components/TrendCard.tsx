@@ -135,9 +135,17 @@ export function TrendCard(video: TikTokVideo) {
           >
             Ver Vídeo Viral <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
           </a>
-          <button className="flex-1 py-4 rounded-2xl bg-white/5 border border-white/5 text-white/50 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center">
-            <ShoppingBag size={16} />
-          </button>
+          {video.productUrl && (
+            <a 
+              href={video.productUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 py-4 rounded-2xl bg-white/5 border border-white/5 text-white/50 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center group/prod"
+              title="Ver Produto na Loja"
+            >
+              <ShoppingBag size={18} className="group-hover/prod:scale-110 transition-transform text-emerald-400" />
+            </a>
+          )}
         </div>
       </div>
     </motion.div>
