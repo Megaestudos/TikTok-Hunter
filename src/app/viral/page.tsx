@@ -2,7 +2,7 @@
 
 import { Sidebar } from "@/components/Sidebar";
 import { TrendCard } from "@/components/TrendCard";
-import { Search, Filter, ArrowUpDown, Loader2, Play, Zap } from "lucide-react";
+import { Search, Filter, ArrowUpDown, Loader2, Play, Zap, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { TikTokVideo } from "@/services/tiktokService";
