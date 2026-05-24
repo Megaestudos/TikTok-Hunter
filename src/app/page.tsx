@@ -3,23 +3,34 @@
 import { Sidebar } from "@/components/Sidebar";
 import { StatCard } from "@/components/StatCard";
 import { AIInsight } from "@/components/AIInsight";
-import { Search, Zap, Loader2 } from "lucide-react";
+import { Search, Zap, Loader2, TrendingUp, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { TrendsChart } from "@/components/TrendsChart";
 import { useState, useEffect } from "react";
 import { ProductService } from "@/services/productService";
+import { TikTokService, TikTokVideo } from "@/services/tiktokService";
 
 export default function Home() {
   const [stats, setStats] = useState<any>(null);
+  const [trendingVideos, setTrendingVideos] = useState<TikTokVideo[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      const data = await ProductService.getStats();
-      setStats(data);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [statsData, videosData] = await Promise.all([
+          ProductService.getStats(),
+          TikTokService.getTrendingVideos()
+        ]);
+        setStats(statsData);
+        setTrendingVideos(videosData.slice(0, 3));
+      } catch (error) {
+        console.error("Erro ao buscar dados:", error);
+      }
       setLoading(false);
     };
-    fetchStats();
+    fetchData();
   }, []);
 
   return (
@@ -34,8 +45,10 @@ export default function Home() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
           >
-            <h1 className="text-2xl md:text-4xl font-bold font-space-grotesk tracking-tight">Visão Geral</h1>
-            <p className="text-muted text-sm mt-1">Dados reais do TikTok Shop atualizados agora.</p>
+            <h1 className="text-2xl md:text-4xl font-bold font-space-grotesk tracking-tight flex items-center gap-2">
+              Dashboard <Sparkles className="text-primary" size={24} />
+            </h1>
+            <p className="text-muted text-sm mt-1">Conectado ao Apify • Monitorando 5 principais hashtags agora.</p>
           </motion.div>
 
           <div className="flex items-center gap-3">
@@ -61,10 +74,10 @@ export default function Home() {
             ))
           ) : (
             <>
-              <StatCard title="Total Monitorado" value={stats.totalMonitored} change="+18%" />
-              <StatCard title="Em Alta Hoje" value={stats.trendingToday} change="+34.2%" />
-              <StatCard title="Crescimento 24h" value={stats.growth24h} change="+12.1%" />
-              <StatCard title="Vendas Estimadas" value={stats.estimatedSales} change="+15.8%" />
+              <StatCard title="Vídeos Analisados" value={stats?.totalMonitored || "0"} change="+18%" />
+              <StatCard title="Trends em Alta" value={stats?.trendingToday || "0"} change="+34.2%" />
+              <StatCard title="Alcance Viral" value={stats?.growth24h || "0%"} change="+12.1%" />
+              <StatCard title="Conversão Est." value={stats?.estimatedSales || "R$ 0"} change="+15.8%" />
             </>
           )}
         </div>
@@ -76,8 +89,11 @@ export default function Home() {
             <div className="absolute top-0 right-0 h-32 w-32 bg-primary/10 blur-[60px] rounded-full" />
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="font-bold text-xl font-space-grotesk">Tendência de Viralização</h2>
-                <p className="text-xs text-muted mt-1">Volume de vídeos e engajamento acumulado global</p>
+                <h2 className="font-bold text-xl font-space-grotesk flex items-center gap-2">
+                  <TrendingUp className="text-primary" size={20} />
+                  Curva de Viralização
+                </h2>
+                <p className="text-xs text-muted mt-1">Interações e propagação de conteúdos virais</p>
               </div>
               <div className="flex gap-2">
                 <button className="bg-white/5 px-3 py-1 rounded-lg text-[10px] font-bold border border-white/5 hover:border-white/10 transition-colors uppercase tracking-widest text-muted hover:text-white">7 Dias</button>
@@ -98,53 +114,23 @@ export default function Home() {
                  <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
                     <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                  </div>
-                 <h2 className="font-bold text-lg font-space-grotesk tracking-tight">IA Insights Reais</h2>
+                 <h2 className="font-bold text-lg font-space-grotesk tracking-tight">Análise Preditiva</h2>
               </div>
               
               <div className="space-y-4">
-                <AIInsight text="Produto '15-Day Cleanse' crescendo 450% nas últimas 48h." type="burst" delay={0.1} />
-                <AIInsight text="Nicho de Suplementos Colágeno com alta taxa de conversão." type="opportunity" delay={0.2} />
-                <AIInsight text="Forte tendência 'Tenniscore' impulsionando vendas de saias plissadas." type="potencial" delay={0.3} />
-                <AIInsight text="Atenção: Saturação alta no nicho de Projetores Baratos." type="alert" delay={0.4} />
+                <AIInsight text="Hashtag #amazonfinds cresceu 28% na última hora." type="burst" delay={0.1} />
+                <AIInsight text="Nicho de Beleza Hacks com baixa saturação no Brasil." type="opportunity" delay={0.2} />
+                <AIInsight text={`Vídeo de @${trendingVideos[0]?.author || 'user'} está gerando alto engajamento.`} type="potencial" delay={0.3} />
+                <AIInsight text="Aviso: Hashtag #viralproducts entrando em fase de saturação." type="alert" delay={0.4} />
               </div>
 
               <button className="w-full mt-8 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-xs font-bold uppercase tracking-widest transition-all">
-                Ver todos os insights
+                Ver Relatório Completo
               </button>
-            </div>
-            
-            <div className="glass rounded-3xl p-6 border border-primary/10 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden relative group">
-              <div className="relative z-10">
-                <h3 className="font-bold text-sm mb-1">Upgrade para Pro</h3>
-                <p className="text-[10px] text-muted mb-4">Acesse filtros avançados e alertas em tempo real.</p>
-                <button className="w-full py-2 rounded-lg bg-primary text-white text-[10px] font-bold uppercase tracking-widest shadow-premium group-hover:scale-[1.02] transition-all">
-                  Desbloquear
-                </button>
-              </div>
-              <Zap className="absolute -bottom-4 -right-4 w-20 h-20 text-primary/10 -rotate-12 group-hover:scale-125 transition-transform" />
             </div>
           </div>
         </div>
       </main>
     </div>
-  );
-}
-
-function TrendingUp({ className, size }: { className?: string, size?: number }) {
-  return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width={size || 24} 
-      height={size || 24} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
-    </svg>
   );
 }
