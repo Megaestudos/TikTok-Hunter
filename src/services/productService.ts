@@ -8,6 +8,7 @@ export interface Product {
   affiliates: number;
   image: string;
   category: string;
+  link: string;
   badge?: "Explodindo" | "Alta Conversão" | "Novo Viral" | "Oportunidade";
   trendData: number[];
 }
@@ -23,6 +24,7 @@ const REAL_TRENDING_PRODUCTS: Product[] = [
     affiliates: 340,
     image: "https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=800&auto=format&fit=crop&q=60",
     category: "Saúde",
+    link: "https://www.amazon.com/dp/B07YXYJ7B4",
     badge: "Explodindo",
     trendData: [10, 20, 15, 40, 80, 120, 150]
   },
@@ -36,6 +38,7 @@ const REAL_TRENDING_PRODUCTS: Product[] = [
     affiliates: 120,
     image: "https://images.unsplash.com/photo-1550575110-59dd3448408a?w=800&auto=format&fit=crop&q=60",
     category: "Beleza",
+    link: "https://www.amazon.com/dp/B00XQ2X6V6",
     badge: "Alta Conversão",
     trendData: [50, 60, 55, 70, 90, 110, 130]
   },
@@ -49,6 +52,7 @@ const REAL_TRENDING_PRODUCTS: Product[] = [
     affiliates: 1200,
     image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=800&auto=format&fit=crop&q=60",
     category: "Beleza",
+    link: "https://www.amazon.com/dp/B00PBX3L7K",
     trendData: [100, 95, 110, 105, 120, 115, 130]
   },
   {
@@ -61,6 +65,7 @@ const REAL_TRENDING_PRODUCTS: Product[] = [
     affiliates: 85,
     image: "https://images.unsplash.com/photo-1586771107445-d3ca888129ff?w=800&auto=format&fit=crop&q=60",
     category: "Beleza",
+    link: "https://plouise.co.uk/",
     badge: "Novo Viral",
     trendData: [5, 10, 25, 40, 80, 150, 300]
   },
@@ -74,6 +79,7 @@ const REAL_TRENDING_PRODUCTS: Product[] = [
     affiliates: 92,
     image: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800&auto=format&fit=crop&q=60",
     category: "Moda",
+    link: "https://www.tiktok.com/t/ZT8FvU3kL/",
     badge: "Oportunidade",
     trendData: [20, 25, 30, 45, 60, 85, 110]
   },
@@ -87,6 +93,7 @@ const REAL_TRENDING_PRODUCTS: Product[] = [
     affiliates: 56,
     image: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&auto=format&fit=crop&q=60",
     category: "Moda",
+    link: "https://www.amazon.com/dp/B0B5Z8Z6Z6",
     trendData: [15, 20, 35, 50, 65, 80, 95]
   },
   {
@@ -99,6 +106,7 @@ const REAL_TRENDING_PRODUCTS: Product[] = [
     affiliates: 45,
     image: "https://images.unsplash.com/photo-1535016120720-40c646bebbdc?w=800&auto=format&fit=crop&q=60",
     category: "Eletrônicos",
+    link: "https://www.aliexpress.com/item/1005005967664421.html",
     badge: "Explodindo",
     trendData: [2, 5, 15, 30, 60, 120, 240]
   }
