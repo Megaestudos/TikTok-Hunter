@@ -11,7 +11,8 @@ interface ProductCardProps {
   videos: number;
   affiliates: number;
   image: string;
-  badge?: "Explodindo" | "Alta Conversão" | "Novo Viral";
+  category?: string;
+  badge?: "Explodindo" | "Alta Conversão" | "Novo Viral" | "Oportunidade";
 }
 
 export function ProductCard({ 
@@ -46,7 +47,8 @@ export function ProductCard({
             <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
               badge === "Explodindo" ? "bg-red-500/80 text-white" : 
               badge === "Alta Conversão" ? "bg-green-500/80 text-white" : 
-              "bg-primary-DEFAULT/80 text-white"
+              badge === "Oportunidade" ? "bg-amber-500/80 text-white" :
+              "bg-primary/80 text-white"
             } backdrop-blur-sm shadow-lg`}>
               {badge}
             </span>

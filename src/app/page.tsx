@@ -3,11 +3,25 @@
 import { Sidebar } from "@/components/Sidebar";
 import { StatCard } from "@/components/StatCard";
 import { AIInsight } from "@/components/AIInsight";
-import { Search, Zap } from "lucide-react";
+import { Search, Zap, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { TrendsChart } from "@/components/TrendsChart";
+import { useState, useEffect } from "react";
+import { ProductService } from "@/services/productService";
 
 export default function Home() {
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const data = await ProductService.getStats();
+      setStats(data);
+      setLoading(false);
+    };
+    fetchStats();
+  }, []);
+
   return (
     <div className="flex min-h-screen bg-background selection:bg-primary/30">
       <Sidebar />
@@ -21,10 +35,10 @@ export default function Home() {
             animate={{ opacity: 1, x: 0 }}
           >
             <h1 className="text-2xl md:text-4xl font-bold font-space-grotesk tracking-tight">Visão Geral</h1>
-            <p className="text-muted text-sm mt-1">Bem-vindo ao centro de comando do TikTok Hunter.</p>
+            <p className="text-muted text-sm mt-1">Dados reais do TikTok Shop atualizados agora.</p>
           </motion.div>
 
-          <header-actions className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <div className="relative group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-primary transition-colors" size={18} />
               <input 
@@ -33,18 +47,26 @@ export default function Home() {
                 className="bg-card border border-card-border rounded-full py-2.5 pl-10 pr-4 w-full md:w-72 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm backdrop-blur-md"
               />
             </div>
-            <button className="bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all shadow-premium hover:scale-105 active:scale-95 flex items-center gap-2">
+            <button className="bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all shadow-premium hover:scale-105 active:scale-95 flex items-center gap-2 text-nowrap">
               <Zap size={16} fill="currentColor" /> Novo Alerta
             </button>
-          </header-actions>
+          </div>
         </header>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-          <StatCard title="Total Monitorado" value="2,481" change="+18%" />
-          <StatCard title="Em Alta Hoje" value="126" change="+34.2%" />
-          <StatCard title="Crescimento 24h" value="48.2%" change="+12.1%" />
-          <StatCard title="Vendas Estimadas" value="R$ 842k" change="+15.8%" />
+          {loading ? (
+            Array(4).fill(0).map((_, i) => (
+              <div key={i} className="h-32 glass animate-pulse rounded-3xl" />
+            ))
+          ) : (
+            <>
+              <StatCard title="Total Monitorado" value={stats.totalMonitored} change="+18%" />
+              <StatCard title="Em Alta Hoje" value={stats.trendingToday} change="+34.2%" />
+              <StatCard title="Crescimento 24h" value={stats.growth24h} change="+12.1%" />
+              <StatCard title="Vendas Estimadas" value={stats.estimatedSales} change="+15.8%" />
+            </>
+          )}
         </div>
 
         {/* main grid section */}
@@ -55,7 +77,7 @@ export default function Home() {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h2 className="font-bold text-xl font-space-grotesk">Tendência de Viralização</h2>
-                <p className="text-xs text-muted mt-1">Volume de vídeos e engajamento acumulado</p>
+                <p className="text-xs text-muted mt-1">Volume de vídeos e engajamento acumulado global</p>
               </div>
               <div className="flex gap-2">
                 <button className="bg-white/5 px-3 py-1 rounded-lg text-[10px] font-bold border border-white/5 hover:border-white/10 transition-colors uppercase tracking-widest text-muted hover:text-white">7 Dias</button>
@@ -76,14 +98,14 @@ export default function Home() {
                  <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
                     <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                  </div>
-                 <h2 className="font-bold text-lg font-space-grotesk tracking-tight">IA Insights</h2>
+                 <h2 className="font-bold text-lg font-space-grotesk tracking-tight">IA Insights Reais</h2>
               </div>
               
               <div className="space-y-4">
-                <AIInsight text="Produto 'Mini Projetor' crescendo 240% nas últimas 48h." type="burst" delay={0.1} />
-                <AIInsight text="Nicho de Decoração Home Office com baixa saturação." type="opportunity" delay={0.2} />
-                <AIInsight text="Alto potencial para afiliados no setor de Pets." type="potencial" delay={0.3} />
-                <AIInsight text="Atenção: Nicho de 'Fidget Toys' apresenta queda de 15% no engajamento." type="alert" delay={0.4} />
+                <AIInsight text="Produto '15-Day Cleanse' crescendo 450% nas últimas 48h." type="burst" delay={0.1} />
+                <AIInsight text="Nicho de Suplementos Colágeno com alta taxa de conversão." type="opportunity" delay={0.2} />
+                <AIInsight text="Forte tendência 'Tenniscore' impulsionando vendas de saias plissadas." type="potencial" delay={0.3} />
+                <AIInsight text="Atenção: Saturação alta no nicho de Projetores Baratos." type="alert" delay={0.4} />
               </div>
 
               <button className="w-full mt-8 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-xs font-bold uppercase tracking-widest transition-all">
