@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
 const data = [
@@ -13,6 +14,14 @@ const data = [
 ];
 
 export function TrendsChart() {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) return <div className="h-full w-full bg-white/5 animate-pulse rounded-2xl" />;
+
   return (
     <div className="h-full w-full">
       <ResponsiveContainer width="100%" height="100%">
