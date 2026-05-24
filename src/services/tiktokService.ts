@@ -45,8 +45,8 @@ export const TikTokService = {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            hashtags: ["tiktokmademebuyit", "amazonfinds", "viralproducts", "skincare", "beautyhacks"],
-            resultsPerPage: 12,
+            hashtags: ["tiktokshop", "tiktokmademebuyit", "amazonfinds", "affiliate", "shop"],
+            resultsPerPage: 15,
             profileScrapeSections: ["videos"],
             profileSorting: "popular"
           }),
@@ -56,30 +56,42 @@ export const TikTokService = {
       if (!response.ok) throw new Error("Falha ao buscar dados do Apify");
 
       const items = await response.json();
-      const mappedData = items.map((item: any) => {
-        const views = item.playCount || 0;
-        const likes = item.diggCount || 0;
-        const shares = item.shareCount || 0;
-        const text = item.text || "";
-        const detectedProduct = detectProductName(text);
-        
-        return {
-          id: item.id || Math.random().toString(36).substr(2, 9),
-          url: item.webVideoUrl,
-          text: text,
-          views: views,
-          likes: likes,
-          shares: shares,
-          comments: item.commentCount || 0,
-          author: item.authorMeta?.uniqueId || "tiktok_user",
-          createTime: item.createTime,
-          coverImage: item.videoMeta?.coverUrl || item.covers?.origin || "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800&auto=format&fit=crop&q=60",
-          trendScore: calculateTrendScore(views, likes, shares),
-          detectedProduct: detectedProduct,
-          productUrl: `https://www.amazon.com/s?k=${encodeURIComponent(detectedProduct)}`,
-          badges: assignBadges(views, likes, shares)
-        };
-      });
+      const mappedData = items
+        .filter((item: any) => {
+          const text = (item.text || "").toLowerCase();
+          // Priorizar vídeos que pareçam ter links ou produtos à venda
+          return text.includes("shop") || 
+                 text.includes("link") || 
+                 text.includes("bio") || 
+                 text.includes("buy") || 
+                 text.includes("get") || 
+                 text.includes("amazon") ||
+                 item.isAd === true;
+        })
+        .map((item: any) => {
+          const views = item.playCount || 0;
+          const likes = item.diggCount || 0;
+          const shares = item.shareCount || 0;
+          const text = item.text || "";
+          const detectedProduct = detectProductName(text);
+          
+          return {
+            id: item.id || Math.random().toString(36).substr(2, 9),
+            url: item.webVideoUrl,
+            text: text,
+            views: views,
+            likes: likes,
+            shares: shares,
+            comments: item.commentCount || 0,
+            author: item.authorMeta?.uniqueId || "tiktok_user",
+            createTime: item.createTime,
+            coverImage: item.videoMeta?.coverUrl || item.covers?.origin || "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800&auto=format&fit=crop&q=60",
+            trendScore: calculateTrendScore(views, likes, shares),
+            detectedProduct: detectedProduct,
+            productUrl: `https://www.amazon.com/s?k=${encodeURIComponent(detectedProduct)}`,
+            badges: assignBadges(views, likes, shares)
+          };
+        });
 
       videoCache = { data: mappedData, timestamp: Date.now() };
       return mappedData;
