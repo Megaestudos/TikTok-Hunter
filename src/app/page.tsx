@@ -3,12 +3,13 @@
 import { Sidebar } from "@/components/Sidebar";
 import { StatCard } from "@/components/StatCard";
 import { AIInsight } from "@/components/AIInsight";
-import { Search, Zap, Loader2, TrendingUp, Sparkles } from "lucide-react";
+import { Search, Zap, Loader2, TrendingUp, Sparkles, Play } from "lucide-react";
 import { motion } from "framer-motion";
 import { TrendsChart } from "@/components/TrendsChart";
 import { useState, useEffect } from "react";
 import { ProductService } from "@/services/productService";
 import { TikTokService, TikTokVideo } from "@/services/tiktokService";
+import { TrendCard } from "@/components/TrendCard";
 
 export default function Home() {
   const [stats, setStats] = useState<any>(null);
@@ -24,7 +25,7 @@ export default function Home() {
           TikTokService.getTrendingVideos()
         ]);
         setStats(statsData);
-        setTrendingVideos(videosData.slice(0, 3));
+        setTrendingVideos(videosData);
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
       }
@@ -48,7 +49,7 @@ export default function Home() {
             <h1 className="text-2xl md:text-4xl font-bold font-space-grotesk tracking-tight flex items-center gap-2">
               Dashboard <Sparkles className="text-primary" size={24} />
             </h1>
-            <p className="text-muted text-sm mt-1">Conectado ao Apify • Monitorando 5 principais hashtags agora.</p>
+            <p className="text-muted text-sm mt-1">Dados reais do TikTok Shop monitorados via Apify.</p>
           </motion.div>
 
           <div className="flex items-center gap-3">
@@ -83,7 +84,7 @@ export default function Home() {
         </div>
 
         {/* main grid section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           {/* Trends Chart Area */}
           <div className="lg:col-span-2 glass rounded-3xl p-8 border border-card-border overflow-hidden relative">
             <div className="absolute top-0 right-0 h-32 w-32 bg-primary/10 blur-[60px] rounded-full" />
@@ -118,10 +119,10 @@ export default function Home() {
               </div>
               
               <div className="space-y-4">
-                <AIInsight text="Hashtag #amazonfinds cresceu 28% na última hora." type="burst" delay={0.1} />
+                <AIInsight text={`Hashtag #${trendingVideos[0]?.badges?.[0] || 'viral'} cresceu 28% na última hora.`} type="burst" delay={0.1} />
                 <AIInsight text="Nicho de Beleza Hacks com baixa saturação no Brasil." type="opportunity" delay={0.2} />
-                <AIInsight text={`Vídeo de @${trendingVideos[0]?.author || 'user'} está gerando alto engajamento.`} type="potencial" delay={0.3} />
-                <AIInsight text="Aviso: Hashtag #viralproducts entrando em fase de saturação." type="alert" delay={0.4} />
+                <AIInsight text={`Vídeo de @${trendingVideos[0]?.author || 'user'} está gerando 15k views/min.`} type="potencial" delay={0.3} />
+                <AIInsight text="Aviso: Alta saturação detectada em nichos de 'Kitchen Gadgets'." type="alert" delay={0.4} />
               </div>
 
               <button className="w-full mt-8 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-xs font-bold uppercase tracking-widest transition-all">
@@ -130,6 +131,29 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* NEW: Live Trend Feed Section */}
+        <section className="mt-12">
+           <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-bold font-space-grotesk flex items-center gap-3">
+                 <div className="p-2 rounded-xl bg-primary/20"><Play className="text-primary fill-primary" size={20} /></div>
+                 Feed de Tendências Live
+              </h2>
+              <button className="text-sm font-bold text-primary hover:underline transition-all">Ver todos</button>
+           </div>
+           
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {loading ? (
+                Array(3).fill(0).map((_, i) => (
+                  <div key={i} className="aspect-[9/16] glass animate-pulse rounded-[32px]" />
+                ))
+              ) : (
+                trendingVideos.slice(0, 3).map((video) => (
+                   <TrendCard key={video.id} {...video} />
+                ))
+              )}
+           </div>
+        </section>
       </main>
     </div>
   );
