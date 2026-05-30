@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, TrendingUp, Users, Video, ExternalLink, Heart, Play, BarChart3, Target, Search } from "lucide-react";
 import Image from "next/image";
 import { Product, Platform } from "../services/productService";
-import { useStorage } from "../services/storageService";
+import { useHydratedStorage } from "../services/storageService";
 import { useState } from "react";
 import { cn } from "../lib/utils";
 
@@ -13,8 +13,8 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onSearchMedia, onAnalyze }: ProductCardProps) {
-  const { toggleFavorite, favorites, addToHistory } = useStorage();
-  const isFavorite = favorites.some(p => p.id === product.id);
+  const { toggleFavorite, favorites, addToHistory, isHydrated } = useHydratedStorage();
+  const isFavorite = isHydrated && favorites.some(p => p.id === product.id);
   const [isHovered, setIsHovered] = useState(false);
 
   // Cast para WinnerProfile se disponível
@@ -34,14 +34,14 @@ export function ProductCard({ product, onSearchMedia, onAnalyze }: ProductCardPr
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, scale: 0.95 }}
+      whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}
-      whileHover={{ y: -5 }}
+      whileHover={{ y: -8, transition: { duration: 0.3 } }}
       onViewportEnter={() => addToHistory(product)}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      className="group relative bg-[#0A0A0A]/60 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden hover:border-primary/50 transition-all duration-500 flex flex-col h-full shadow-2xl"
+      className="group relative glass-premium rounded-[32px] overflow-hidden transition-all duration-500 flex flex-col h-full shadow-2xl"
     >
       {/* Platform & Winner Seals */}
       <div className="absolute top-3 left-3 z-30 flex flex-col gap-2">

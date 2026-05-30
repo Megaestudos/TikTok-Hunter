@@ -1,19 +1,19 @@
 /**
  * Blacklist Global de Termos Genéricos
  */
-const BLACKLIST = [
+export const BLACKLIST = [
   "tiktokshop", "tiktokmademebuyit", "amazonfinds", "amazonmusthaves", "fyp", 
   "foryou", "foryoupage", "trending", "sale", "discount", "shopnow", "viral", 
   "product", "dropshipping", "ecommerce", "affiliate", "deal", "deals", 
   "bestbuy", "musthave", "trendingproduct", "hotproduct", "tiktokvideo"
 ];
 
-const STOPWORDS = [
+export const STOPWORDS = [
   "de", "da", "o", "a", "do", "dos", "das", "um", "uma", "com", "para", "em", "no", "na",
   "for", "to", "at", "the", "and", "but", "this", "that", "it", "with", "is", "of", "on"
 ];
 
-const PROMOTIONAL_WORDS = [
+export const PROMOTIONAL_WORDS = [
   "promoção", "oferta", "desconto", "sale", "off", "free", "grátis", "envio", "entrega",
   "viral", "top", "imperdível", "compre", "check", "link", "bio", "shop", "comprar"
 ];
@@ -171,5 +171,10 @@ export const ProductExtractorService = {
       brand: brand || "Generic",
       model: modelMatch ? modelMatch[0] : "Standard"
     };
+  },
+
+  isGenericWord: (word: string): boolean => {
+    const w = word.toLowerCase();
+    return STOPWORDS.includes(w) || PROMOTIONAL_WORDS.includes(w) || BLACKLIST.includes(w);
   }
 };

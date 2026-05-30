@@ -20,7 +20,7 @@ import { ProductEvidenceDrawer } from "@/components/ProductEvidenceDrawer";
 import { MediaDrawer } from "@/components/MediaDrawer";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { useQuery } from "@tanstack/react-query";
-import { useStorage } from "@/services/storageService";
+import { useHydratedStorage } from "@/services/storageService";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -41,7 +41,7 @@ export default function Home() {
   const [analyzingProduct, setAnalyzingProduct] = useState<Product | null>(null);
   const [aiResult, setAiResult] = useState<AIAnalysisResult | null>(null);
 
-  const { addSearch } = useStorage();
+  const { addSearch, isHydrated } = useHydratedStorage();
 
   // Queries
   const { data: stats, isLoading: isStatsLoading } = useQuery({
@@ -51,7 +51,11 @@ export default function Home() {
 
   const { data: trendingVideos = [], isLoading: isVideosLoading } = useQuery({
     queryKey: ['trending-videos'],
-    queryFn: () => TikTokService.getTrendingVideos()
+    queryFn: async () => {
+      const response = await fetch("/api/trending");
+      if (!response.ok) throw new Error("Erro ao buscar tendências do TikTok");
+      return response.json();
+    }
   });
 
   const { data: winners = [], isLoading: isProductsLoading } = useQuery({

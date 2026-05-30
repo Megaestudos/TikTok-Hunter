@@ -24,7 +24,7 @@ export const SimilarityService = {
     const normalized = SimilarityService.normalizeName(name);
     const words = normalized.split(" ").filter(w => w.length > 2);
     // Usa o ProductExtractor para garantir consistência nas stopwords
-    return new Set(words.filter(w => !ProductExtractorService.getComparisonKey(w).includes(w)));
+    return new Set(words.filter(w => !ProductExtractorService.isGenericWord(w)));
   },
 
   /**

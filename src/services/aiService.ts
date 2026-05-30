@@ -17,50 +17,21 @@ export interface AIAnalysisResult {
 
 export const AIService = {
   analyzeProduct: async (productName: string, productCategory: string): Promise<AIAnalysisResult> => {
-    if (!API_KEY || API_KEY.includes("AIza")) { // Check for real key pattern
-       // If it looks like a valid key prefix, try to use it
-    } else {
-       return getMockAIAnalysis(productName);
-    }
-
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      
-      const prompt = `
-        Analise o seguinte produto para dropshipping/e-commerce:
-        Nome: ${productName}
-        Categoria: ${productCategory}
-        
-        Gere os seguintes itens em formato JSON:
-        1. headline: Uma headline matadora e chamativa.
-        2. shortCopy: Uma copy curta para anúncio (máximo 150 caracteres).
-        3. longCopy: Uma copy longa persuasiva ouvindo o método AIDA.
-        4. ugcScript: Um roteiro para um vídeo de conteúdo gerado pelo usuário (UGC).
-        5. videoScript: Um roteiro para vídeo de vendas/anúncio.
-        6. targetAudience: Descrição detalhada do público alvo (idade, dores, desejos).
-        7. adInterests: Uma lista de 5 interesses para segmentação no Facebook/Instagram Ads.
-        8. viralPotential: Nota de 0 a 100 para o potencial viral.
-        9. sellingDifficulty: Nível de dificuldade de venda (Fácil, Média, Difícil).
-        
-        Responda APENAS o JSON.
-      `;
+      const response = await fetch("/api/ai/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productName, productCategory }),
+      });
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-      
-      try {
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          return JSON.parse(jsonMatch[0]);
-        }
-        throw new Error("JSON not found in response");
-      } catch (e) {
-        console.error("Falha ao parsear resposta da IA:", e);
-        return getMockAIAnalysis(productName);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Erro na análise de IA");
       }
+
+      return await response.json();
     } catch (error) {
-      console.error("Erro no serviço de IA:", error);
+      console.error("Erro no serviço de IA (Client):", error);
       return getMockAIAnalysis(productName);
     }
   }

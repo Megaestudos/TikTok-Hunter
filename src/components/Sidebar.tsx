@@ -1,12 +1,12 @@
 import { Home, TrendingUp, ShoppingBag, BarChart3, Heart, Settings, Zap, History, FolderHeart, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useStorage } from "../services/storageService";
+import { useHydratedStorage } from "../services/storageService";
 import { cn } from "../lib/utils";
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { favorites, history, searchHistory, collections } = useStorage();
+  const { favorites, history, searchHistory, collections, isHydrated } = useHydratedStorage();
 
   const navItems = [
     { icon: <Home size={20} />, label: "Dashboard", href: "/" },

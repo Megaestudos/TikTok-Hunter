@@ -61,7 +61,7 @@ export const ProductCorrelationService = {
         // Regra de Ouro: Marcas específicas diferentes NUNCA agrupam
         if (groupExtraction.brand && targetExtraction.brand && groupExtraction.brand !== targetExtraction.brand) continue;
 
-        const similarity = ProductExtractorService.calculateSimilarity(
+        const similarity = SimilarityService.calculateSimilarity(
           group.representative.name,
           semanticGroup.representative.name
         );

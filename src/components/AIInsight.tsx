@@ -1,47 +1,54 @@
-import { Zap, TrendingUp, AlertCircle, Target } from "lucide-react";
 import { motion } from "framer-motion";
-import { cn } from "../lib/utils";
+import { Sparkles, Zap, AlertCircle, TrendingUp } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface AIInsightProps {
   text: string;
-  type: 'burst' | 'opportunity' | 'potencial' | 'alert';
+  type: "burst" | "opportunity" | "alert" | "potencial";
   delay?: number;
 }
 
 export function AIInsight({ text, type, delay = 0 }: AIInsightProps) {
-  const configs = {
-    burst: {
-      color: 'border-orange-500/20 bg-orange-500/5 text-orange-200/90',
-      icon: <Zap size={14} className="text-orange-500 shrink-0" />
-    },
-    opportunity: {
-      color: 'border-green-500/20 bg-green-500/5 text-green-200/90',
-      icon: <Target size={14} className="text-green-500 shrink-0" />
-    },
-    potencial: {
-      color: 'border-blue-500/20 bg-blue-500/5 text-blue-200/90',
-      icon: <TrendingUp size={14} className="text-blue-500 shrink-0" />
-    },
-    alert: {
-      color: 'border-red-500/20 bg-red-500/5 text-red-200/90',
-      icon: <AlertCircle size={14} className="text-red-500 shrink-0" />
+  const getColors = () => {
+    switch (type) {
+      case "burst": return "bg-primary/20 text-primary-hover border-primary/20";
+      case "opportunity": return "bg-emerald-500/20 text-emerald-400 border-emerald-500/20";
+      case "alert": return "bg-rose-500/20 text-rose-400 border-rose-500/20";
+      case "potencial": return "bg-sky-500/20 text-sky-400 border-sky-500/20";
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case "burst": return <Zap size={14} className="text-primary-hover" />;
+      case "opportunity": return <TrendingUp size={14} className="text-emerald-400" />;
+      case "alert": return <AlertCircle size={14} className="text-rose-400" />;
+      case "potencial": return <Sparkles size={14} className="text-sky-400" />;
     }
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, x: -10 }}
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay }}
-      className={cn(
-        "p-4 rounded-2xl border text-xs leading-relaxed flex gap-3 items-center group transition-all cursor-default backdrop-blur-md",
-        configs[type].color
-      )}
+      transition={{ delay, duration: 0.5, ease: "easeOut" }}
+      whileHover={{ scale: 1.02, x: 5 }}
+      className="glass-premium p-4 rounded-2xl flex items-start gap-4 group cursor-default"
     >
-      <div className="p-2 rounded-xl bg-black/20 border border-white/5 shadow-inner">
-        {configs[type].icon}
+      <div className={cn(
+        "w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 transition-all duration-300 group-hover:shadow-glow",
+        getColors()
+      )}>
+        {getIcon()}
       </div>
-      <p className="flex-1 font-medium">{text}</p>
+      <div className="flex flex-col gap-1">
+        <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 group-hover:opacity-100 transition-opacity">
+          {type === "burst" ? "Explosão" : type === "opportunity" ? "Oportunidade" : type === "alert" ? "Alerta" : "Potencial"}
+        </span>
+        <p className="text-xs text-white/70 leading-relaxed font-medium group-hover:text-white transition-colors">
+          {text}
+        </p>
+      </div>
     </motion.div>
   );
 }
