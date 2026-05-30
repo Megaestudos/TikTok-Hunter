@@ -15,7 +15,17 @@ const FAVORITE_PRODUCTS = [
     videos: 842,
     affiliates: 124,
     image: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=800&auto=format&fit=crop&q=60",
-    badge: "Explodindo" as const
+    badge: "Explodindo",
+    category: "Eletrônicos",
+    link: "#",
+    platform: "Amazon" as const,
+    viralScore: 92,
+    opportunityScore: 88,
+    competitionScore: 35,
+    saturationLevel: 25,
+    engagement: "Alta",
+    tags: ["eletronicos", "cinema", "tecnologia"],
+    trendData: [20, 40, 60, 80, 90, 85, 95]
   },
   {
     id: "3",
@@ -26,7 +36,17 @@ const FAVORITE_PRODUCTS = [
     videos: 320,
     affiliates: 56,
     image: "https://images.unsplash.com/photo-1534073828943-f801091bb18c?w=800&auto=format&fit=crop&q=60",
-    badge: "Novo Viral" as const
+    badge: "Novo Viral",
+    category: "Decoração",
+    link: "#",
+    platform: "AliExpress" as const,
+    viralScore: 85,
+    opportunityScore: 94,
+    competitionScore: 20,
+    saturationLevel: 15,
+    engagement: "Explosiva",
+    tags: ["decoracao", "gadget", "viral"],
+    trendData: [10, 25, 45, 60, 75, 88, 92]
   }
 ];
 
@@ -66,7 +86,7 @@ export default function Favoritos() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
           >
             {FAVORITE_PRODUCTS.map((product) => (
-              <ProductCard key={product.id} {...product} />
+              <ProductCard key={product.id} product={product} />
             ))}
           </motion.div>
         ) : (
