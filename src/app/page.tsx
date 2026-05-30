@@ -56,8 +56,11 @@ export default function Home() {
     queryKey: ['winners', searchQuery, selectedCategory, selectedPlatforms, selectedTrend],
     queryFn: async () => {
       // 1. Busca Bruta em todas as plataformas selecionadas
+      // Audit: Se a query for vazia, usamos um termo de tendência padrão para popular o dashboard
+      const effectiveQuery = searchQuery || "viral";
+      
       const rawResults = await SearchService.search({ 
-        query: searchQuery,
+        query: effectiveQuery,
         platforms: selectedPlatforms
       });
 
