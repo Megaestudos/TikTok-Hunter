@@ -131,7 +131,7 @@ export default function Home() {
           >
             <div className="flex items-center gap-2 mb-1">
                <div className="px-2 py-0.5 bg-primary/20 text-primary text-[10px] font-bold rounded-md border border-primary/20">PRO VERSION</div>
-               <span className="text-white/40 text-[10px] font-bold">V 2.0.5</span>
+               <span className="text-white/40 text-[10px] font-bold">V 2.0.6</span>
             </div>
             <h1 className="text-3xl md:text-5xl font-black font-space-grotesk tracking-tighter flex items-center gap-3 text-white">
               TikTok Hunter <div className="p-2 bg-primary rounded-2xl shadow-[0_0_20px_rgba(139,92,246,0.4)]"><Sparkles className="text-white" size={24} /></div>
