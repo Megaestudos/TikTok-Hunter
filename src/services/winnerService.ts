@@ -8,14 +8,20 @@ export const WinnerService = {
    */
   discoverWinners: async (query: string, platforms?: Platform[]): Promise<ConsolidatedProduct[]> => {
     // 1. Definição de Termos de Busca (Fallback para Tendências se a query for vazia)
-    const trendingKeywords = ["mais vendidos", "oferta do dia", "viral products", "utilidades domésticas", "tecnologia", "beleza"];
-    const effectiveQuery = query || trendingKeywords[Math.floor(Date.now() / (1000 * 60 * 60)) % trendingKeywords.length];
+    // Usamos múltiplos termos em paralelo para maximizar o volume de resultados
+    const trendingKeywords = ["mais vendidos", "oferta do dia", "utilidades domésticas", "tecnologia", "beleza", "gadgets"];
+    
+    // Se não houver query, buscamos pelos 3 primeiros termos de tendência em paralelo
+    const queriesToRun = query ? [query] : trendingKeywords.slice(0, 3);
 
-    // 2. Busca em todas as plataformas selecionadas
-    const rawResults = await SearchService.search({ 
-      query: effectiveQuery,
+    // 2. Busca em todas as plataformas selecionadas para cada query
+    const allSearchPromises = queriesToRun.map(q => SearchService.search({ 
+      query: q,
       platforms: platforms
-    });
+    }));
+
+    const searchResultsArrays = await Promise.all(allSearchPromises);
+    const rawResults = searchResultsArrays.flat();
     
     // 3. Filtro de Segurança: Oculta o que não parece um produto real ou não tem imagem
     const validResults = rawResults.filter(p => 
@@ -28,9 +34,8 @@ export const WinnerService = {
     let consolidated = await ProductCorrelationService.correlate(validResults);
 
     // 5. Fail-Safe Fallback: Se a internet falhar ou retornar pouco, usamos o baseline real curado
-    if (consolidated.length < 5) {
+    if (consolidated.length < 10) {
       const baseline = await ProductService.getTrendingProducts();
-      // Converte baseline para ConsolidatedProduct format
       const consolidatedBaseline = baseline.map(p => ({
         ...p,
         platforms: [p.platform],
@@ -40,18 +45,18 @@ export const WinnerService = {
         similarityConfidence: 100
       } as ConsolidatedProduct));
 
-      // Merge e remoção de duplicatas simples por ID
-      const existingIds = new Set(consolidated.map(p => p.id));
-      const needed = 15 - consolidated.length;
+      const existingNames = new Set(consolidated.map(p => p.name.toLowerCase().substring(0, 20)));
       const additional = consolidatedBaseline
-        .filter(p => !existingIds.has(p.id))
-        .slice(0, needed);
+        .filter(p => !existingNames.has(p.name.toLowerCase().substring(0, 20)))
+        .slice(0, 20 - consolidated.length);
       
       consolidated = [...consolidated, ...additional];
     }
 
-    // 6. Ranking Final
-    return consolidated.sort((a, b) => b.globalWinnerScore - a.globalWinnerScore);
+    // 6. Ranking Final e Limite de Volume
+    return consolidated
+      .sort((a, b) => b.globalWinnerScore - a.globalWinnerScore)
+      .slice(0, 100); // Exibe até 100 produtos para maximizar a grade
   },
 
   /**

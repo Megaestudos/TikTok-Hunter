@@ -32,7 +32,7 @@ export const MercadoLivreProvider = {
 
     try {
       const response = await fetch(
-        `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(query)}&limit=15`,
+        `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(query)}&limit=50`,
         { signal: controller.signal }
       );
       

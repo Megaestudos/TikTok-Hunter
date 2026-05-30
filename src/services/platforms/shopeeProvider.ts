@@ -6,7 +6,7 @@ export const ShopeeProvider = {
     // https://shopee.com.br/api/v4/search/search_items?keyword={query}&limit=10
     
     try {
-      const response = await fetch(`https://shopee.com.br/api/v4/search/search_items?keyword=${encodeURIComponent(query)}&limit=10`, {
+      const response = await fetch(`https://shopee.com.br/api/v4/search/search_items?keyword=${encodeURIComponent(query)}&limit=40`, {
         headers: {
           'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'referer': 'https://shopee.com.br/',

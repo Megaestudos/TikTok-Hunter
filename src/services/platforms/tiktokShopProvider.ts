@@ -80,7 +80,7 @@ export const TikTokShopProvider = {
           body: JSON.stringify({
             searchQueries: [query],
             hashtags: ["tiktokshop", "viralproduct"],
-            resultsPerPage: 20,
+            resultsPerPage: 40,
             shouldDownloadVideos: false,
             shouldDownloadCovers: true
           }),
