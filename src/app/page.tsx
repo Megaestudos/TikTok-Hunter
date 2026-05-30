@@ -61,27 +61,24 @@ export default function Home() {
   const { data: winners = [], isLoading: isProductsLoading } = useQuery({
     queryKey: ['winners', searchQuery, selectedCategory, selectedPlatforms, selectedTrend],
     queryFn: async () => {
-      // 1. Busca Bruta em todas as plataformas selecionadas
-      // Audit: Se a query for vazia, usamos um termo de tendência padrão para popular o dashboard
-      const effectiveQuery = searchQuery || "viral";
+      const params = new URLSearchParams();
+      if (searchQuery) params.append("query", searchQuery);
+      if (selectedPlatforms.length > 0) params.append("platforms", selectedPlatforms.join(","));
       
-      const rawResults = await SearchService.search({ 
-        query: effectiveQuery,
-        platforms: selectedPlatforms
-      });
-
-      // 2. Correlação e Inteligência Cross-Platform
-      let results = await ProductCorrelationService.correlate(rawResults);
+      const response = await fetch(`/api/search/winners?${params.toString()}`);
+      if (!response.ok) throw new Error("Erro ao buscar vencedores");
+      
+      let results = await response.json();
       
       if (selectedCategory !== "Tudo") {
-        results = results.filter(w => w.category === selectedCategory);
+        results = (results as ConsolidatedProduct[]).filter(w => w.category === selectedCategory);
       }
       
       if (selectedTrend !== "Tudo") {
-        results = (results as any).filter((w: any) => w.trendCategory === selectedTrend);
+        results = (results as ConsolidatedProduct[]).filter(w => w.trendCategory === selectedTrend);
       }
       
-      return results;
+      return results as ConsolidatedProduct[];
     }
   });
 

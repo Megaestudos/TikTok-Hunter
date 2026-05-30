@@ -1,13 +1,12 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import { Sidebar } from "@/components/Sidebar";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, TrendingUp, DollarSign, ExternalLink, ArrowRight, Loader2, Sparkles, X, BarChart3, Target, Search, Users, Video, Play } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
-import { ProductService, Product } from "@/services/productService";
-import { WinnerService, WinnerProfile } from "@/services/winnerService";
+import { ProductService, Product, Platform } from "@/services/productService";
+import { WinnerService } from "@/services/winnerService";
+import { ConsolidatedProduct } from "@/services/productCorrelationService";
 import { AIService, AIAnalysisResult } from "@/services/aiService";
 import { ProductEvidenceDrawer } from "@/components/ProductEvidenceDrawer";
 import { MediaSearchService, MediaEvidence } from "@/services/media/mediaSearchService";
@@ -16,12 +15,12 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 export default function BestSellers() {
-  const [products, setProducts] = useState<WinnerProfile[]>([]);
+  const [products, setProducts] = useState<ConsolidatedProduct[]>([]);
   const [loading, setLoading] = useState(true);
   
   // States for Interactivity
-  const [selectedProduct, setSelectedProduct] = useState<WinnerProfile | null>(null);
-  const [analyzingProduct, setAnalyzingProduct] = useState<WinnerProfile | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<ConsolidatedProduct | null>(null);
+  const [analyzingProduct, setAnalyzingProduct] = useState<ConsolidatedProduct | null>(null);
   const [aiResult, setAiResult] = useState<AIAnalysisResult | null>(null);
   
   // Media Evidence State
@@ -34,8 +33,9 @@ export default function BestSellers() {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        // Buscando vencedores reais sem query específica para popular o dashboard
-        const data = await WinnerService.discoverWinners("");
+        const response = await fetch("/api/search/winners");
+        if (!response.ok) throw new Error("Falha na resposta da API");
+        const data = await response.json();
         setProducts(data);
       } catch (error) {
         console.error("Erro ao buscar vencedores:", error);
@@ -49,12 +49,12 @@ export default function BestSellers() {
   const stats = useMemo(() => {
     if (products.length === 0) return { totalSales: "0", avgPrice: "0", totalRevenue: "0" };
     
-    const totalSalesNum = products.reduce((acc, p) => acc + parseInt(p.sales.replace(/[^0-9]/g, "") || "0"), 0);
-    const avgPriceNum = products.reduce((acc, p) => acc + parseFloat(p.price.replace(/[^0-9,.]/g, "").replace(",", ".") || "0"), 0) / products.length;
+    const totalSalesNum = products.reduce((acc, p) => acc + parseInt(p.sales?.replace(/[^0-9]/g, "") || "0"), 0);
+    const avgPriceNum = products.reduce((acc, p) => acc + parseFloat(p.price?.replace(/[^0-9,.]/g, "").replace(",", ".") || "0"), 0) / products.length;
     
     const totalRevenueNum = products.reduce((acc, p) => {
-      const price = parseFloat(p.price.replace(/[^0-9,.]/g, "").replace(",", ".") || "0");
-      const sales = parseInt(p.sales.replace(/[^0-9]/g, "") || "0");
+      const price = parseFloat(p.price?.replace(/[^0-9,.]/g, "").replace(",", ".") || "0");
+      const sales = parseInt(p.sales?.replace(/[^0-9]/g, "") || "0");
       return acc + (price * sales);
     }, 0);
 
@@ -66,6 +66,17 @@ export default function BestSellers() {
         : `R$ ${(totalRevenueNum/1000).toFixed(0)}k`
     };
   }, [products]);
+
+  const getPlatformIcon = (platform: Platform) => {
+    switch (platform) {
+      case "Amazon": return "📦";
+      case "TikTok Shop": return "🎵";
+      case "AliExpress": return "🌏";
+      case "Shopee": return "🛒";
+      case "Mercado Livre": return "🤝";
+      default: return "🌟";
+    }
+  };
 
   const openMediaDrawer = async (product: Product) => {
     setSelectedProductForMedia(product);
@@ -85,7 +96,7 @@ export default function BestSellers() {
     }
   };
 
-  const startAIAnalysis = async (product: WinnerProfile) => {
+  const startAIAnalysis = async (product: ConsolidatedProduct) => {
     setAnalyzingProduct(product);
     setAiResult(null);
     try {
@@ -148,8 +159,8 @@ export default function BestSellers() {
                   ))
                 ) : (
                   products.map((product) => {
-                    const priceNum = parseFloat(product.price.replace(/[^0-9,.]/g, "").replace(",", ".") || "0");
-                    const salesNum = parseInt(product.sales.replace(/[^0-9]/g, "") || "0");
+                    const priceNum = parseFloat(product.price?.replace(/[^0-9,.]/g, "").replace(",", ".") || "0");
+                    const salesNum = parseInt(product.sales?.replace(/[^0-9]/g, "") || "0");
                     const revenue = priceNum * salesNum;
                     
                     return (
@@ -166,10 +177,19 @@ export default function BestSellers() {
                             </div>
                             <div className="flex flex-col gap-1">
                               <span className="text-sm font-bold text-white group-hover:text-primary transition-colors line-clamp-1">{product.name}</span>
-                              <div className="flex items-center gap-2">
-                                 <span className="text-[9px] text-white/30 font-black uppercase tracking-widest">{product.category}</span>
+                              <div className="flex items-center gap-3">
+                                 <div className="flex -space-x-1">
+                                    {product.platforms.map(p => (
+                                      <div key={p} className="w-4 h-4 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-[8px]" title={p}>
+                                        {getPlatformIcon(p)}
+                                      </div>
+                                    ))}
+                                 </div>
                                  <div className="w-1 h-1 rounded-full bg-white/10" />
-                                 <span className="text-[9px] text-primary font-black uppercase tracking-widest">{product.winnerSeal}</span>
+                                 <span className={cn(
+                                   "text-[9px] font-black uppercase tracking-widest",
+                                   product.trendCategory === "Explosivo" ? "text-emerald-400" : "text-primary"
+                                 )}>{product.trendCategory}</span>
                               </div>
                             </div>
                           </div>
@@ -180,7 +200,7 @@ export default function BestSellers() {
                         <td className="p-6 text-center">
                           <div className="flex flex-col items-center">
                             <span className="text-sm font-black text-emerald-400 tabular-nums">{product.sales}</span>
-                            <span className="text-[10px] text-emerald-400/50 font-black uppercase tracking-tighter">Entregues</span>
+                            <span className="text-[10px] text-emerald-400/50 font-black uppercase tracking-tighter">Estimadas</span>
                           </div>
                         </td>
                         <td className="p-6 text-center">

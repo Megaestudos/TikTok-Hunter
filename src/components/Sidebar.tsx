@@ -1,3 +1,5 @@
+"use client";
+
 import { Home, TrendingUp, ShoppingBag, BarChart3, Heart, Settings, Zap, History, FolderHeart, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";

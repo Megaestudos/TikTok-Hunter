@@ -1,102 +1,40 @@
 import { Product, Platform } from "./productService";
 import { SearchService } from "./searchService";
-import { ProductExtractorService } from "./utils/productExtractor";
-
-export type TrendType = "Emergente" | "Explosivo" | "Saturado" | "Oportunidade";
-
-export interface WinnerProfile extends Product {
-  detectedOn: Platform[];
-  consolidatedScore: number;
-  winnerSeal: "🟢 Alta" | "🟡 Média" | "🔴 Saturado";
-  trendCategory: TrendType;
-  platformPrices: Record<string, string>;
-}
+import { ProductCorrelationService, ConsolidatedProduct } from "./productCorrelationService";
 
 export const WinnerService = {
   /**
-   * Transforma buscas brutas em perfis de "Produtos Vencedores" consolidados
+   * Transforma buscas brutas em perfis de "Produtos Vencedores" consolidados de alta qualidade
    */
-  discoverWinners: async (query: string): Promise<WinnerProfile[]> => {
-    // 1. Busca em todas as plataformas
-    const rawResults = await SearchService.search({ query });
+  discoverWinners: async (query: string, platforms?: Platform[]): Promise<ConsolidatedProduct[]> => {
+    // 1. Definição de Termos de Busca (Fallback para Tendências se a query for vazia)
+    const trendingKeywords = ["mais vendidos", "oferta do dia", "viral products", "tiktok made me buy it", "utilidades domésticas", "cozinha inteligente"];
+    const effectiveQuery = query || trendingKeywords[Math.floor(Date.now() / (1000 * 60 * 60)) % trendingKeywords.length];
+
+    // 2. Busca em todas as plataformas selecionadas
+    const rawResults = await SearchService.search({ 
+      query: effectiveQuery,
+      platforms: platforms
+    });
     
-    // 2. Filtro de Produtos Reais: Oculta o que não parece um produto real
+    // 3. Filtro de Segurança: Oculta o que não parece um produto real ou não tem imagem
     const validResults = rawResults.filter(p => 
-      p.name !== "TikTok Viral Product" && 
-      p.name.length > 8 && 
+      p.name.length > 10 && 
+      p.image && !p.image.includes("no-product") &&
       !p.name.includes("???")
     );
 
-    // 3. Inteligência de Consolidação (Deduplicação)
-    const consolidatedMap = new Map<string, WinnerProfile>();
+    // 4. Inteligência de Correlação Enterprise (Deduplicação Semântica + Scoring)
+    const consolidated = await ProductCorrelationService.correlate(validResults);
 
-    validResults.forEach(product => {
-      const normalizedName = ProductExtractorService.extract(product.name)
-        .toLowerCase()
-        .substring(0, 15); 
-      
-      const existing = consolidatedMap.get(normalizedName);
-      if (existing) {
-        // Merge de plataformas
-        if (!existing.detectedOn.includes(product.platform)) {
-          existing.detectedOn.push(product.platform);
-        }
-        
-        // Merge de preços
-        existing.platformPrices[product.platform] = product.price;
-        
-        // Atualiza métricas (pega a melhor/mais recente)
-        existing.viralScore = Math.max(existing.viralScore, product.viralScore);
-        existing.opportunityScore = Math.max(existing.opportunityScore, product.opportunityScore);
-        existing.winnerScore = Math.max(existing.winnerScore || 0, product.winnerScore || 0);
-      } else {
-        consolidatedMap.set(normalizedName, {
-          ...product,
-          detectedOn: [product.platform],
-          consolidatedScore: 0,
-          winnerSeal: "🟡 Média",
-          trendCategory: "Emergente",
-          platformPrices: { [product.platform]: product.price }
-        });
-      }
-    });
-
-    // 4. Scoring e Categorização Final
-    const winners = Array.from(consolidatedMap.values()).map(winner => {
-      // Cálculo de Score Consolidado
-      const platformBonus = (winner.detectedOn.length - 1) * 15;
-      const baseScore = winner.winnerScore || winner.viralScore || 0;
-      const finalScore = Math.min(100, baseScore + platformBonus);
-
-      // Definição de Selo
-      let seal: WinnerProfile["winnerSeal"] = "🟡 Média";
-      if (finalScore > 80 && winner.saturationLevel < 40) seal = "🟢 Alta";
-      if (winner.saturationLevel > 70 || winner.competitionScore > 85) seal = "🔴 Saturado";
-
-      // Definição de Categoria de Tendência
-      let category: TrendType = "Emergente";
-      if (winner.viralScore > 85 && winner.opportunityScore > 75) category = "Explosivo";
-      else if (seal === "🔴 Saturado") category = "Saturado";
-      else if (winner.opportunityScore > 80) category = "Oportunidade";
-
-      return {
-        ...winner,
-        consolidatedScore: finalScore,
-        winnerSeal: seal,
-        trendCategory: category,
-        // Tag especial de vencedor
-        tags: [...winner.tags, seal.replace(/[^\w\s]/gi, '').trim()]
-      };
-    });
-
-    // 5. Ranking Global: Ordena por score consolidado
-    return winners.sort((a, b) => b.consolidatedScore - a.consolidatedScore);
+    // 5. Ranking Final
+    return consolidated.sort((a, b) => b.globalWinnerScore - a.globalWinnerScore);
   },
 
   /**
    * Retorna os Top 10 Vencedores Globais
    */
-  getTopWinners: async (query: string = ""): Promise<WinnerProfile[]> => {
+  getTopWinners: async (query: string = ""): Promise<ConsolidatedProduct[]> => {
     const winners = await WinnerService.discoverWinners(query);
     return winners.slice(0, 10);
   }
