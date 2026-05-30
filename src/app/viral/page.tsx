@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { Sidebar } from "@/components/Sidebar";
 import { TrendCard } from "@/components/TrendCard";
 import { Search, Filter, ArrowUpDown, Loader2, Play, Zap, ShoppingBag } from "lucide-react";

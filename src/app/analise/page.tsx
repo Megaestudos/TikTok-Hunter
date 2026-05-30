@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { Sidebar } from "@/components/Sidebar";
 import { AIInsight } from "@/components/AIInsight";
 import { motion } from "framer-motion";

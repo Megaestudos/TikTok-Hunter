@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { Sidebar } from "@/components/Sidebar";
 import { motion } from "framer-motion";
 import { ShoppingBag, TrendingUp, DollarSign, ExternalLink, ArrowRight } from "lucide-react";

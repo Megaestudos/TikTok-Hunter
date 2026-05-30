@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { Sidebar } from "@/components/Sidebar";
 import { Settings, User, Bell, Shield, Wallet, Save } from "lucide-react";
 import { motion } from "framer-motion";

@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { Sidebar } from "@/components/Sidebar";
 import { ProductCard } from "@/components/ProductCard";
 import { Search, Heart } from "lucide-react";
@@ -16,6 +18,7 @@ const FAVORITE_PRODUCTS = [
     affiliates: 124,
     image: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=800&auto=format&fit=crop&q=60",
     badge: "Explodindo",
+    brand: null,
     category: "Eletrônicos",
     link: "#",
     platform: "Amazon" as const,
@@ -25,6 +28,7 @@ const FAVORITE_PRODUCTS = [
     saturationLevel: 25,
     engagement: "Alta",
     tags: ["eletronicos", "cinema", "tecnologia"],
+    confidenceScore: 100,
     trendData: [20, 40, 60, 80, 90, 85, 95]
   },
   {
@@ -37,6 +41,7 @@ const FAVORITE_PRODUCTS = [
     affiliates: 56,
     image: "https://images.unsplash.com/photo-1534073828943-f801091bb18c?w=800&auto=format&fit=crop&q=60",
     badge: "Novo Viral",
+    brand: null,
     category: "Decoração",
     link: "#",
     platform: "AliExpress" as const,
@@ -46,6 +51,7 @@ const FAVORITE_PRODUCTS = [
     saturationLevel: 15,
     engagement: "Explosiva",
     tags: ["decoracao", "gadget", "viral"],
+    confidenceScore: 100,
     trendData: [10, 25, 45, 60, 75, 88, 92]
   }
 ];
