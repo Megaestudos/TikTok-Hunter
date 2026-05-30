@@ -100,18 +100,18 @@ export const TikTokShopProvider = {
         return extractorCache.get(text)!;
       };
 
-      // 2. Consolidação de Itens
+      // 2. Consolidação de Itens com Filtragem Estrita
       const groups = new Map<string, TiktokRawItem[]>();
       rawItems.forEach(item => {
-        const name = getProductName(item.text);
-        if (name === "Produto Viral") return;
-        const key = ProductExtractorService.getFingerprint(name);
+        const extraction = ProductExtractorService.extractDetailed(item.text);
+        if (extraction.productName === "Produto não identificado" || extraction.confidence < 60) return;
+        
+        const key = ProductExtractorService.getFingerprint(extraction.productName);
         groups.set(key, [...(groups.get(key) || []), item]);
       });
 
       // 3. Processamento de Produtos Consolidados
       const products: Product[] = Array.from(groups.values()).map(items => {
-        // Seleciona o melhor item (relevância: views + likes)
         const bestItem = items.sort((a, b) => 
           (sanitize(b.playCount) + sanitize(b.diggCount)) - (sanitize(a.playCount) + sanitize(a.diggCount))
         )[0];
@@ -121,40 +121,54 @@ export const TikTokShopProvider = {
         const totalShares = items.reduce((acc, i) => acc + sanitize(i.shareCount), 0);
         const totalComments = items.reduce((acc, i) => acc + sanitize(i.commentCount), 0);
         
-        const engRate = totalViews > 0 ? (totalLikes + totalShares + totalComments) / totalViews : 0;
-        const prodName = getProductName(bestItem.text);
-        const extractorScore = ProductExtractorService.getConfidenceScore(prodName);
-
-        // Score de Confiança Avançado
-        let confidence = Math.floor((extractorScore * 0.6) + (items.length > 1 ? 30 : 0) + (bestItem.authorMeta?.verified ? 10 : 0));
-        confidence = Math.min(100, confidence);
-
-        // Métricas de Sucesso
-        const viral = Math.min(100, Math.floor((totalViews / (800000 * items.length)) * 70 + (engRate * 400)));
-        // Opportunity Score com amortecimento (Damping)
-        const opportunity = Math.min(100, Math.floor((engRate * 500) + (Math.log10(totalShares + 1) * 10)));
+        // Novo Trend Score: (likes + comments*2 + shares*3) / views
+        const engWeight = totalLikes + (totalComments * 2) + (totalShares * 3);
+        const engRate = totalViews > 0 ? engWeight / totalViews : 0;
         
-        const winner = Math.min(100, Math.floor((viral * 0.3) + (opportunity * 0.4) + (confidence * 0.3)));
-        const growth = Math.min(500, Math.floor(engRate * 1000));
+        // Normalização do Trend Score (0-100)
+        // Assume-se que um rate de 0.15 (15%) é excelente (100)
+        const trendScore = Math.min(100, Math.floor((engRate / 0.15) * 100));
+
+        const extraction = ProductExtractorService.extractDetailed(bestItem.text);
+        
+        // Potencial de Venda
+        let salesPotential: "Baixo" | "Médio" | "Alto" | "Explosivo" = "Baixo";
+        if (totalViews > 5000000 || (trendScore > 80 && totalViews > 1000000)) salesPotential = "Explosivo";
+        else if (totalViews > 500000 || trendScore > 60) salesPotential = "Alto";
+        else if (totalViews > 100000 || trendScore > 40) salesPotential = "Médio";
+
+        const confidence = extraction.confidence;
+
+        // Opportunity Score: Reflete potencial vs saturação local
+        const opportunity = Math.min(100, Math.floor((trendScore * 0.6) + (items.length > 2 ? 40 : 0)));
+        
+        const winner = Math.min(100, Math.floor((trendScore * 0.4) + (opportunity * 0.3) + (confidence * 0.3)));
 
         return {
-          id: `tt-hard-${bestItem.id}`,
-          name: prodName,
+          id: `tt-group-${bestItem.id}`,
+          name: extraction.productName,
+          brand: extraction.brand,
           price: "R$ ---", 
-          sales: totalViews > 1000000 ? "Explosivo" : "Viral",
-          growth: `+${growth}%`,
+          sales: salesPotential, 
+          salesPotential: salesPotential,
+          growth: `+${Math.floor(trendScore * 1.5)}%`,
           videos: items.length,
-          affiliates: Math.floor(totalShares / 500),
+          affiliates: Math.floor(totalShares / 800),
           image: bestItem.videoMeta?.coverUrl || bestItem.covers?.origin || "/images/no-product.png",
-          category: ProductExtractorService.detectCategory(prodName),
-          link: bestItem.webVideoUrl,
+          category: extraction.category,
+          link: `https://www.amazon.com.br/s?k=${encodeURIComponent(extraction.productName)}`,
           platform: "TikTok Shop",
-          viralScore: viral,
+          viralScore: trendScore,
           opportunityScore: opportunity,
-          competitionScore: Math.max(20, Math.min(100, 100 - (items.length * 10))),
-          saturationLevel: Math.floor((items.length / Math.max(1, rawItems.length)) * 100), // Estimativa local baseado no dataset
-          engagement: engRate > 0.05 ? "Explosiva" : "Alta",
-          tags: ["TikTok Shop", ProductExtractorService.detectBrandAndModel(prodName).brand],
+          competitionScore: Math.max(10, Math.min(100, 110 - (items.length * 15))),
+          saturationLevel: Math.floor((items.length / 20) * 100),
+          engagement: engRate > 0.1 ? "Explosiva" : "Alta",
+          engagementRate: engRate,
+          views: totalViews,
+          likes: totalLikes,
+          comments: totalComments,
+          shares: totalShares,
+          tags: ["TikTok Shop", extraction.brand || "Generic"],
           trendData: generateTrendFromMetrics(totalViews, engRate),
           badge: winner > 85 ? "Explodindo" : (opportunity > 80 ? "Oportunidade" : undefined),
           winnerScore: winner,

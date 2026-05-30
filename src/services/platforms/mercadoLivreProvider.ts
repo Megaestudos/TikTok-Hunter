@@ -84,10 +84,11 @@ export const MercadoLivreProvider = {
         return {
           id: `meli-${item.id}`,
           name: item.title,
+          brand: isOfficial ? (item.official_store_name || "Official Store") : null,
           price: `R$ ${price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
           sales: sold > 0 ? `${sold}` : "Início",
           growth: `+${growthVal}%`,
-          videos: Math.floor(sold / 50), // Estimativa de reviews reais
+          videos: Math.floor(sold / 50), 
           affiliates: Math.floor(sold / 100) + (isOfficial ? 15 : 2),
           image: imageUrl,
           category: CATEGORY_MAP[item.category_id] || "Geral",
@@ -104,9 +105,9 @@ export const MercadoLivreProvider = {
             item.condition === "new" ? "Novo" : "Usado"
           ].filter(Boolean),
           trendData,
-          // Extra props (safe for Product type as they won't interfere)
-          stock: item.available_quantity,
-          officialStore: item.official_store_name || (isOfficial ? "Store" : null)
+          confidenceScore: 100, // Mercado Livre data is considered high confidence
+          // Extra props
+          stock: item.available_quantity
         };
       });
 

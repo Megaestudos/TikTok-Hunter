@@ -15,8 +15,10 @@ export type Platform =
 export interface Product {
   id: string;
   name: string;
+  brand: string | null;
   price: string;
   sales: string;
+  salesPotential?: "Baixo" | "Médio" | "Alto" | "Explosivo";
   growth: string;
   videos: number;
   affiliates: number;
@@ -29,9 +31,15 @@ export interface Product {
   competitionScore: number;
   saturationLevel: number;
   engagement: string;
+  engagementRate?: number;
+  views?: number;
+  likes?: number;
+  comments?: number;
+  shares?: number;
   tags: string[];
   badge?: string;
   winnerScore?: number;
+  confidenceScore: number;
   trendData: number[];
 }
 

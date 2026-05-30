@@ -35,10 +35,10 @@ export const ProductCorrelationService = {
     const initialGroups = new Map<string, Product[]>();
 
     allProducts.forEach(product => {
-      const canonicalName = ProductExtractorService.extract(product.name);
-      if (canonicalName === "Produto Viral") return;
+      const extraction = ProductExtractorService.extractDetailed(product.name);
+      if (extraction.productName === "Produto não identificado" || extraction.confidence < 60) return;
 
-      const fingerprint = ProductExtractorService.getFingerprint(canonicalName);
+      const fingerprint = ProductExtractorService.getFingerprint(extraction.productName);
       const existing = initialGroups.get(fingerprint) || [];
       initialGroups.set(fingerprint, [...existing, product]);
     });
@@ -53,23 +53,20 @@ export const ProductCorrelationService = {
 
     rawGroups.forEach(group => {
       let merged = false;
-      const groupBrand = ProductExtractorService.detectBrandAndModel(group.representative.name).brand;
-      const groupModel = ProductExtractorService.detectBrandAndModel(group.representative.name).model;
+      const groupExtraction = ProductExtractorService.extractDetailed(group.representative.name);
       
       for (const semanticGroup of semanticGroups) {
-        const targetBrand = ProductExtractorService.detectBrandAndModel(semanticGroup.representative.name).brand;
-        const targetModel = ProductExtractorService.detectBrandAndModel(semanticGroup.representative.name).model;
+        const targetExtraction = ProductExtractorService.extractDetailed(semanticGroup.representative.name);
 
-        // Regra de Ouro: Marcas ou Modelos específicos diferentes NUNCA agrupam
-        if (groupBrand !== "Generic" && targetBrand !== "Generic" && groupBrand !== targetBrand) continue;
-        if (groupModel !== "Standard" && targetModel !== "Standard" && groupModel !== targetModel) continue;
+        // Regra de Ouro: Marcas específicas diferentes NUNCA agrupam
+        if (groupExtraction.brand && targetExtraction.brand && groupExtraction.brand !== targetExtraction.brand) continue;
 
-        const similarity = SimilarityService.calculateSimilarity(
+        const similarity = ProductExtractorService.calculateSimilarity(
           group.representative.name,
           semanticGroup.representative.name
         );
 
-        if (similarity >= 85) { // Threshold aumentado para evitar falsos positivos
+        if (similarity >= 85) { 
           semanticGroup.allItems.push(...group.allItems);
           semanticGroup.confidence = Math.floor((semanticGroup.confidence + similarity) / 2);
           merged = true;
@@ -90,10 +87,10 @@ export const ProductCorrelationService = {
       const platforms = Array.from(new Set<Platform>(items.map(i => i.platform)));
       const platformBoost = Math.min(30, (platforms.length - 1) * 15);
 
-      const totalVideos = items.reduce((acc, i) => acc + (i.videos || 0), 0);
-      const prodName = ProductExtractorService.extract(bestBase.name);
-      const extractorConfidence = ProductExtractorService.getConfidenceScore(prodName);
-
+      const totalVideos = items.length;
+      const totalViews = items.reduce((acc, i) => acc + (i.views || 0), 0);
+      const extraction = ProductExtractorService.extractDetailed(bestBase.name);
+      
       // Metodologia Winner Scoring (Scout v3)
       const maxViral = Math.max(...items.map(i => i.viralScore || 0));
       const maxOpp = Math.max(...items.map(i => i.opportunityScore || 0));
@@ -103,20 +100,31 @@ export const ProductCorrelationService = {
         { ...bestBase, winnerScore: globalScore },
         platforms.length,
         items.length,
-        extractorConfidence
+        extraction.confidence
       );
 
-      const productId = ProductExtractorService.getFingerprint(prodName);
+      const productId = ProductExtractorService.getFingerprint(extraction.productName);
       const history = await TrendRepository.getHistory(productId);
       const trends = HistoricalTrendEngine.analyzeTrend(history);
 
+      // Determina o Potencial de Venda Global
+      let globalSalesPotential: "Baixo" | "Médio" | "Alto" | "Explosivo" = "Baixo";
+      const potentials = items.map(i => i.salesPotential).filter(Boolean);
+      if (potentials.includes("Explosivo") || (globalScore > 85 && totalViews > 2000000)) globalSalesPotential = "Explosivo";
+      else if (potentials.includes("Alto") || globalScore > 70) globalSalesPotential = "Alto";
+      else if (potentials.includes("Médio") || globalScore > 50) globalSalesPotential = "Médio";
+
       const consolidatedProd = {
         ...bestBase,
-        name: prodName,
+        name: extraction.productName,
+        brand: extraction.brand,
         platforms,
         videos: totalVideos,
+        views: totalViews,
+        sales: globalSalesPotential,
+        salesPotential: globalSalesPotential,
         globalWinnerScore: poi.globalRank,
-        confidenceScore: extractorConfidence,
+        confidenceScore: extraction.confidence,
         similarityConfidence: group.confidence,
         trendCategory: poi.lifecycleStage === "Explosão" ? "Explosivo" : (poi.lifecycleStage === "Crescimento" ? "Oportunidade" : "Emergente"),
         badge: poi.lifecycleStage === "Explosão" ? "EXPLODINDO" : poi.recommendation,
@@ -124,7 +132,7 @@ export const ProductCorrelationService = {
         poi,
         history,
         trends,
-        tags: Array.from(new Set([...bestBase.tags, ...platforms]))
+        tags: Array.from(new Set([...bestBase.tags, ...platforms, extraction.category]))
       } as ConsolidatedProduct;
 
       consolidatedProd.scoutForecast = ForecastEngine.predict(consolidatedProd);
@@ -137,7 +145,7 @@ export const ProductCorrelationService = {
         opportunityScore: maxOpp,
         saturationLevel: poi.saturationScore,
         competitionScore: bestBase.competitionScore || 0,
-        confidenceScore: extractorConfidence,
+        confidenceScore: extraction.confidence,
         platforms: platforms,
         mediaEvidenceCount: items.length,
         growthValue: parseInt(bestBase.growth?.replace(/[^\d]/g, "") || "0")
@@ -155,6 +163,9 @@ export const ProductCorrelationService = {
       topWinners: consolidated.slice(0, 10),
       topTrends: consolidated.filter(p => p.trendCategory === "Explosivo").slice(0, 20),
       topOpportunities: consolidated.filter(p => p.trendCategory === "Oportunidade").slice(0, 15),
+      topLowCompetition: consolidated.filter(p => p.competitionScore < 40).sort((a, b) => b.globalWinnerScore - a.globalWinnerScore).slice(0, 15),
+      topShared: [...consolidated].sort((a, b) => (b.shares || 0) - (a.shares || 0)).slice(0, 15),
+      topCommented: [...consolidated].sort((a, b) => (b.comments || 0) - (a.comments || 0)).slice(0, 15),
       ...ForecastEngine.getRankings(consolidated)
     };
   }

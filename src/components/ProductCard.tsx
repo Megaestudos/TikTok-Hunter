@@ -136,12 +136,28 @@ export function ProductCard({ product, onSearchMedia, onAnalyze }: ProductCardPr
         </div>
 
         {/* Tags */}
-        <div className="flex flex-wrap gap-1.5 mb-5 opacity-70">
+        <div className="flex flex-wrap gap-1.5 mb-2 opacity-70">
           {product.tags.map(tag => (
             <span key={tag} className="px-1.5 py-0.5 rounded bg-white/5 border border-white/5 text-[9px] text-white/70">
               #{tag}
             </span>
           ))}
+        </div>
+
+        {/* Intelligence Metadata */}
+        <div className="flex items-center gap-3 mb-4">
+           <div className="flex items-center gap-1 px-1.5 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded text-[9px] font-bold text-blue-400">
+             <div className={cn(
+               "w-1 h-1 rounded-full animate-pulse",
+               product.confidenceScore > 90 ? "bg-blue-400" : "bg-amber-400"
+             )} />
+             CONFIDÊNCIA: {product.confidenceScore}%
+           </div>
+           {product.salesPotential && (
+             <div className="flex items-center gap-1 px-1.5 py-0.5 bg-primary/10 border border-primary/20 rounded text-[9px] font-bold text-primary">
+               POTENCIAL: {product.salesPotential}
+             </div>
+           )}
         </div>
 
         {/* Main Stats Grid */}
