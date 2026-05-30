@@ -36,7 +36,7 @@ export const ProductCorrelationService = {
 
     allProducts.forEach(product => {
       const extraction = ProductExtractorService.extractDetailed(product.name);
-      if (extraction.productName === "Produto não identificado" || extraction.confidence < 60) return;
+      if (extraction.productName === "Produto não identificado" || extraction.confidence < 40) return;
 
       const fingerprint = ProductExtractorService.getFingerprint(extraction.productName);
       const existing = initialGroups.get(fingerprint) || [];
